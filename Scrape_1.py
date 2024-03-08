@@ -1,4 +1,4 @@
-from selenium import webdriver
+from seleniumwire import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -11,26 +11,43 @@ from traceback import print_exc
 import os
 import csv
 
-number = 1
+number = __file__.split('\\')[-1].split('.')[0].split("Scrape_")[-1]
 
 class Apollo:
     def __init__(self,proxy :str | None,number : str | int) -> None:
         self.chrome_options = webdriver.FirefoxOptions()
         self.chrome_options.add_argument(f"--user-agent={UserAgent().random }")
+        self.chrome_options.add_argument('--no-sandbox')
+        self.chrome_options.add_argument('--ignore-certificate-errors-spki-list')
+        self.chrome_options.add_argument('--ignore-ssl-errors')
+
         if proxy:
-            self.chrome_options.add_argument(f"--proxy-server={proxy.strip()}")
-        self.driver = webdriver.Firefox(options=self.chrome_options)
+            prox = proxy.split(":")
+            proxy_username = prox[2]
+            proxy_password = prox[3]
+            proxy_id = prox[0] + ":" + prox[1]
+
+            seleniumwire_options = {
+                'proxy': {
+                    'http': f'http://{proxy_username}:{proxy_password}@{proxy_id}',
+                    'https': f'http://{proxy_username}:{proxy_password}@{proxy_id}',
+                    'verify': False,
+                },
+            }
+            self.driver = webdriver.Firefox(seleniumwire_options=seleniumwire_options, options=self.chrome_options)
+        else:
+            self.driver = webdriver.Firefox(options=self.chrome_options)
         self.driver.implicitly_wait(10)
         self.actions = ActionChains(self.driver)
         self.pages : int
         self.output_path = os.getcwd() + f"/resources/Output/Output{number}.csv"
         self.output_file = open(self.output_path, 'a+')
-        self.csv_writer = csv.writer(self.output_file,delimiter=' ',quotechar=',')
+        self.csv_writer = csv.writer(self.output_file,quotechar=',')
 
     def login(self,email:str,password:str):
         '''logs in to the self.io website.'''
         self.driver.get('https://app.apollo.io/#/login')
-        email_input = WebDriverWait(self.driver, 10).until(
+        email_input = WebDriverWait(self.driver, 50).until(
             EC.presence_of_element_located((By.XPATH, '//span[text()="Email"]//parent::div/div/div/input'))
         )
         email_input.send_keys(email)
@@ -48,7 +65,7 @@ class Apollo:
         self.driver.get('https://app.apollo.io/#/contacts/import')
         sleep(2)
         try:
-            upload = WebDriverWait(self.driver, 20).until(
+            upload = WebDriverWait(self.driver, 50).until(
                 EC.presence_of_element_located((By.XPATH,'//input[@type="file"]')))
         except Exception as e:
             print(repr(e))
@@ -56,11 +73,11 @@ class Apollo:
             input("Press Enter to exit...")
             exit(1)
         upload.send_keys(filepath)
-        select = WebDriverWait(self.driver, 20).until(
+        select = WebDriverWait(self.driver, 50).until(
         EC.presence_of_element_located((By.XPATH, "//div[@id='main-app']/div[2]/div/div/div[2]/div[2]/div/div/div/div/div[3]/div/div/div[2]/div[2]/div[2]/div[3]/div/div[2]/div/div/div/div/div")))
         self.actions.move_to_element(select).click().perform()
         
-        option = WebDriverWait(self.driver, 20).until(
+        option = WebDriverWait(self.driver, 50).until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, ".Select-option:nth-child(12)"))
         )
         option.click()
@@ -86,11 +103,11 @@ class Apollo:
             WebDriverWait(self.driver, 40).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, ".zp_FVbJk"))
             )
-            select = WebDriverWait(self.driver, 20).until(
+            select = WebDriverWait(self.driver, 50).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, '.zp_FVbJk')))
             select.click()
             self.driver.find_element(By.LINK_TEXT, "Select this page").click()
-            enrich = WebDriverWait(self.driver, 20).until(
+            enrich = WebDriverWait(self.driver, 50).until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, "#enrich > .apollo-icon-caret-down-small"))
             )
             enrich.click()
@@ -103,7 +120,7 @@ class Apollo:
     def scrape_data(self):
         try:
             print("Scraping Data...")
-            rows = WebDriverWait(self.driver, 20).until(
+            rows = WebDriverWait(self.driver, 50).until(
                 EC.presence_of_all_elements_located((By.CLASS_NAME,"zp_RFed0"))
             )
             self.driver.implicitly_wait(10)
@@ -218,6 +235,6 @@ if __name__ == "__main__":
                 
     except Exception as e:
         print_exc()
-        
+
     finally:
         apollo.teardown()
