@@ -1,0 +1,27 @@
+How does the script works.
+    -Takes the file from "resources/Main" folder and divides it into chunks of 125.
+    -Upload each chuncks
+    -Enriches it
+    -Scrape the data and save it to "resources/Output" folder.
+
+Key Terms to know:
+{id} :- Id is the unique number of each script.
+
+How to add new Accounts and Scrapers?
+-To add new scrapers:
+    Copy the Scrape_.py and add an unique id at the end of the file name.
+        1. Example
+            Copy Scrape_.py and rename it as Scrape_1.py
+
+            Here. 1 is the id of this script.
+
+-Set the email, password, proxy in the ".env" file.
+    Look at the comment in the .env file for more information.
+
+-Setting up the .csv file that is to be uploaded.
+    Goto resources/Main
+    Add the .csv file in format "gtx{id}.csv"
+
+-Lookup the Extracted data from Apollo.io.
+    Goto resources/Output
+    Open the Output{id}.csv for the corresponding script.
